@@ -259,3 +259,8 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/CSHttpServer/NAudioHttpAudioTest
+/CSHttpServer/Mp3ResponseTest
+/CSHttpServer/CSHttpServer - 複製
+/CSHttpServer/CSHttpServer/Index of _menu.html
+/CSHttpServer/CSHttpServer/html_template.html
