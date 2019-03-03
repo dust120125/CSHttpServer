@@ -48,6 +48,12 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RuntimeCompiler.cs" />
+    <None Include="scripts\mediaplayer.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="scripts\dir - 複製.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="UserScriptManager.cs" />
     <None Include="scripts\dir.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -65,7 +71,19 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="scripts\template.html" />
+    <Content Include="icons\back.gif" />
+    <Content Include="icons\file.gif" />
+    <Content Include="icons\folder.gif" />
+    <None Include="scripts\mediaplayer_backup.html" />
+    <None Include="scripts\mediaplayer.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="scripts\mediaplayer.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="scripts\mediaplayer.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

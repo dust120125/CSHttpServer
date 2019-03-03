@@ -11,7 +11,7 @@ namespace UserScript
         private static char[] PathTrimChars = { '/' };
         private const int MAX_FILENAME_LENGTH = 48;
 
-        public Script(object[] args) : base(args)
+        public Script(params object[] args) : base(args)
         {
 
         }
@@ -58,8 +58,9 @@ namespace UserScript
 
         private bool GetHtmlResult(string path)
         {
+            //Console.WriteLine("GET: " + _GET["media"]);            
             if (path == "/")
-            {
+            {                
                 var ds = DriveInfo.GetDrives();
                 string[] drives = new string[ds.Length];
                 for (int i = 0; i < ds.Length; i++)
@@ -73,18 +74,32 @@ namespace UserScript
             {
                 string modifiedTime = new DirectoryInfo(path).LastWriteTime.ToString("r");
                 Header("Last-Modified", modifiedTime);
-
+                
                 if (_REQUEST_HEADER["if-modified-since"] == modifiedTime)
                 {
                     StatusCode(304); //回應Client不須重新取得資源
                     Action(Actions.None);
                     return true;
                 }
+                
+                if (_GET.Contains("media"))
+                {
+                    var mediaplayer = GetScript(_SERVER["file-path"] + "mediaplayer.cs", path);
+                    if (mediaplayer.Run())
+                    {
+                        if(mediaplayer.ExtraText != null && mediaplayer.ExtraText.Length > 0)
+                        {
+                            echo(mediaplayer.ExtraText);
+                        }
+                    }
+                    else StatusCode(404);
+                    return true;
+                }
 
-                GetDirectoryHtml("Index of " + path, true, Directory.GetFileSystemEntries(path));                
+                GetDirectoryHtml("Index of " + path, true, Directory.GetFileSystemEntries(path));
             }
             else return false;
-            
+
             Action(Actions.HTML);
             Header("content-type", "text/html;charset=UTF-8");
             return true;

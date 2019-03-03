@@ -41,6 +41,7 @@ namespace UserScript
 
     public abstract class BaseScript : IDisposable
     {
+
         protected class InnerNameValueCollection
         {
             public string this[string key]
@@ -57,19 +58,26 @@ namespace UserScript
             {
                 _innerCollection = innerCollection;
             }
+
+            public bool Contains(string value)
+            {
+                return _innerCollection.AllKeys.Contains(value);
+            }
         }
 
-        protected InnerNameValueCollection _GET;
-        protected InnerNameValueCollection _SERVER;
-        protected InnerNameValueCollection _REQUEST_HEADER;
+        protected readonly InnerNameValueCollection _GET;
+        protected readonly InnerNameValueCollection _SERVER;
+        protected readonly InnerNameValueCollection _REQUEST_HEADER;
 
-        private readonly MemoryStream __EchoStream;
-        private readonly StreamWriter __EchoWriter;
+        private MemoryStream __EchoStream;
+        private StreamWriter __EchoWriter;
 
         private Actions __Action;
         private int? __StateCode;
         private string __Location;
         protected readonly NameValueCollection __Headers;
+
+        public string ExtraText;
 
         private HttpContextHandler __ContextHandler;
 
@@ -80,16 +88,44 @@ namespace UserScript
                 __EchoWriter.Flush();
                 return new Result(__Action, __Headers, __StateCode, __Location, __EchoStream, __EchoStream.Length);
             }
+
+            protected set
+            {
+                __Action = value.Action;
+                __StateCode = value.StatusCode;
+                __Location = value.Location;
+                __EchoWriter.Close();
+                __EchoStream = value.InputStream as MemoryStream;
+                __EchoWriter = new StreamWriter(__EchoStream);
+                __Headers.Clear();
+                foreach(var k in value.Headers.AllKeys)
+                {
+                    __Headers.Set(k, value.Headers[k]);
+                }
+            }
         }
 
-        public BaseScript(object[] args)
+        private object[] __args;
+        protected object[] _OTHER_ARGS;
+
+        /// <summary>
+        /// 可以被HttpServer動態編譯及執行
+        /// </summary>
+        /// <param name="args"></param>
+        public BaseScript(params object[] args)
         {
-            __ContextHandler =  args[0] as HttpContextHandler;
-            _SERVER = new InnerNameValueCollection(args[1] as NameValueCollection);
-            _REQUEST_HEADER = new InnerNameValueCollection(args[2] as NameValueCollection);
-            if (args.Length > 3)
+            __args = args[0] as object[];
+            _OTHER_ARGS = args[1] as object[];
+            __ContextHandler = __args[0] as HttpContextHandler;
+            _SERVER = new InnerNameValueCollection(__args[1] as NameValueCollection);
+            _REQUEST_HEADER = new InnerNameValueCollection(__args[2] as NameValueCollection);
+            if (__args.Length > 3)
             {
-                _GET = new InnerNameValueCollection(args[3] as NameValueCollection);
+                _GET = new InnerNameValueCollection(__args[3] as NameValueCollection);
+            }
+            else
+            {
+                _GET = new InnerNameValueCollection(new NameValueCollection());
             }
 
             __Headers = new NameValueCollection();
@@ -148,6 +184,11 @@ namespace UserScript
         protected void Location(string location)
         {
             __Location = location;
+        }
+
+        protected BaseScript GetScript(string fileName, params object[] others)
+        {
+            return HttpServer.GetUserScript(fileName, __args, others);
         }
 
         public StreamReader GetInputStream()

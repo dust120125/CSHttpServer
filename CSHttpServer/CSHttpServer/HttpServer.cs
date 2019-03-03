@@ -8,6 +8,7 @@ using System.Web;
 using System.Reflection;
 using UserScript;
 using System.Collections.Specialized;
+using System.Text.RegularExpressions;
 
 namespace CSHttpServer
 {
@@ -106,7 +107,7 @@ namespace CSHttpServer
         /// <param name="fileName">檔案路徑</param>
         /// <param name="args">建構方法參數，用以生成腳本實體</param>
         /// <returns>腳本實體</returns>
-        public static BaseScript GetUserScript(string fileName, object[] args)
+        public static BaseScript GetUserScript(string fileName, object[] args, params object[] others)
         {
             var fileInfo = new FileInfo(fileName);
             Type type;
@@ -119,7 +120,7 @@ namespace CSHttpServer
             {
                 type = CompilingScript(fileInfo);
             }
-            return Activator.CreateInstance(type, new object[] { args }) as BaseScript;
+            return Activator.CreateInstance(type, new object[] { args, others }) as BaseScript;
         }
 
         private static Type CompilingScript(FileInfo fileInfo)
@@ -324,15 +325,25 @@ namespace CSHttpServer
         {
             try
             {
+                string csp = null;
                 var path = Environment.CurrentDirectory + LocalUrlWithoutQuery;
                 var csi = path.IndexOf(".cs");
-                var csp = csi > 0 ? path.Substring(0, csi + 3) : null;
+                if(path.Length > csi + 3)
+                {
+                    var s = path[csi + 3];
+                    if (path[csi + 3] == '/' || path[csi + 3] == '\\')
+                    {
+                        csp = csi > 0 ? path.Substring(0, csi + 3) : null;
+                    }
+                }
+                else csp = csi > 0 ? path.Substring(0, csi + 3) : null;
 
                 if (csp != null && File.Exists(csp))
                 {
                     RunUserScripts(csp);
                 }
-                else if (File.Exists(path))
+
+                if (File.Exists(path))
                 {
                     if (path.EndsWith(".cs"))
                     {
@@ -377,7 +388,13 @@ namespace CSHttpServer
                 { "remote-address", RemoteAddress }
             };
             if (filePath != null)
-                param.Add("file-path", new FileInfo(filePath).Name);
+            {
+                var name = new FileInfo(filePath).Name;                
+                var path = LocalUrlWithoutQuery.
+                    Substring(1, LocalUrlWithoutQuery.IndexOf(name) - 1);
+                param.Add("file-name", name); //ex: dir.cs
+                param.Add("file-path", path); //ex: scripts/
+            }
 
             return QueryList == null ?
                 new object[] { this, param, Request.Headers } :
@@ -471,7 +488,8 @@ namespace CSHttpServer
                 foreach (string q in qs)
                 {
                     var tmp = q.Split(QUERY_SPLIT_CHAR, 2);
-                    queries.Add(HttpUtility.UrlDecode(tmp[0]), HttpUtility.UrlDecode(tmp[1]));
+                    var value = tmp.Length > 1 ? HttpUtility.UrlDecode(tmp[1]) : "";
+                    queries.Add(HttpUtility.UrlDecode(tmp[0]), value);
                 }
                 return queries;
             }

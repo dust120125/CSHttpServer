@@ -53,6 +53,7 @@ namespace CSHttpServer
             {
                 StringBuilder sb = new StringBuilder();
 
+                sb.AppendLine(String.Format("\nFileName: {0}", results.Errors[0].FileName));
                 foreach (CompilerError error in results.Errors)
                 {
                     sb.AppendLine(String.Format("Error ({0}): {1}　Line: {2}", error.ErrorNumber, error.ErrorText, error.Line));
