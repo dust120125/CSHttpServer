@@ -7,12 +7,41 @@ namespace HttpServerDemo
     {
         static void Main(string[] args)
         {
-            HttpServer hfs = new HttpServer(80)
+            //port=main port
+            //local=local port
+            //auth=AuthenticationUserFile (file path) & turn on Authentication
+            //log = use log (0-1)
+            var port = 80;
+            var local = 2222;
+            string auth = null;
+            var log = true;
+
+            foreach(var s in args)
             {
-                LocalPort = 2222,
-                UseAuthentication = true,
-                AuthenticationUserFile = "Users.txt",
-                UseLog = true
+                var cmd = s.Split('=');
+                switch (cmd[0])
+                {
+                    case "-port":
+                        port = int.Parse(cmd[1]);
+                        break;
+                    case "-local":
+                        local = int.Parse(cmd[1]);
+                        break;
+                    case "-auth":
+                        auth = cmd[1];
+                        break;
+                    case "-log":
+                        log = cmd[1] == "1";
+                        break;
+                }
+            }
+
+            HttpServer hfs = new HttpServer(port)
+            {
+                LocalPort = local,
+                UseAuthentication = auth != null,
+                AuthenticationUserFile = auth,
+                UseLog = log
             };
             hfs.Start();
 

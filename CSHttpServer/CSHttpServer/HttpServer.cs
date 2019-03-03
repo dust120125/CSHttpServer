@@ -56,6 +56,7 @@ namespace CSHttpServer
         {
             set
             {
+                if (value == null) return;
                 string text = File.ReadAllText(value);
                 UserList = new Dictionary<string, string>();
                 foreach (string u in text.Split(NEWLINE_SPLIT_STRING, StringSplitOptions.None))
@@ -154,6 +155,8 @@ namespace CSHttpServer
             }
 
             Server.Start();
+            Console.WriteLine("Server Running....");
+
             Server.BeginGetContext(new AsyncCallback(OnGetContext), Server);
         }
 
@@ -328,7 +331,7 @@ namespace CSHttpServer
                 string csp = null;
                 var path = Environment.CurrentDirectory + LocalUrlWithoutQuery;
                 var csi = path.IndexOf(".cs");
-                if(path.Length > csi + 3)
+                if (path.Length > csi + 3)
                 {
                     var s = path[csi + 3];
                     if (path[csi + 3] == '/' || path[csi + 3] == '\\')
@@ -342,8 +345,7 @@ namespace CSHttpServer
                 {
                     RunUserScripts(csp);
                 }
-
-                if (File.Exists(path))
+                else if (File.Exists(path))
                 {
                     if (path.EndsWith(".cs"))
                     {
@@ -389,7 +391,7 @@ namespace CSHttpServer
             };
             if (filePath != null)
             {
-                var name = new FileInfo(filePath).Name;                
+                var name = new FileInfo(filePath).Name;
                 var path = LocalUrlWithoutQuery.
                     Substring(1, LocalUrlWithoutQuery.IndexOf(name) - 1);
                 param.Add("file-name", name); //ex: dir.cs
@@ -593,7 +595,7 @@ namespace CSHttpServer
         /// <param name="length">內容長度</param>        
         private void WriteStream(Stream input, Stream output, long start, long length)
         {
-            if(length > input.Length - start)
+            if (length > input.Length - start)
             {
                 Response.StatusCode = 416;
                 return;
