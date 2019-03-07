@@ -107,6 +107,7 @@ namespace CSHttpServer
         /// </summary>
         /// <param name="fileName">檔案路徑</param>
         /// <param name="args">建構方法參數，用以生成腳本實體</param>
+        /// <param name="others">額外傳遞參數</param>
         /// <returns>腳本實體</returns>
         public static BaseScript GetUserScript(string fileName, object[] args, params object[] others)
         {
@@ -163,6 +164,7 @@ namespace CSHttpServer
         public void Stop()
         {
             Server.Stop();
+            LogLine("Server Closed");
         }
 
         #region Log Methods
@@ -444,9 +446,15 @@ namespace CSHttpServer
                     Response.StatusCode = 307;
                     Response.RedirectLocation = result.Location;
                     break;
+                case Actions.HTML:
+                case Actions.Text:
+                    ResponseNormal(result.InputStream, result.StreamLength);
+                    break;
                 case Actions.None:
                     break;
                 default:
+                    var len = result.InputStream?.Length;
+                    if (len == null || len.Value < 1) break;
                     ResponseNormal(result.InputStream, result.StreamLength);
                     break;
             }
@@ -516,6 +524,14 @@ namespace CSHttpServer
         /// <param name="range">以"xxx-xxx"為格式，表示檔案範圍，單位為byte</param>
         private void FileTransport(string fileName, string range = null)
         {
+            var modifiedSince = Request.Headers["if-modified-since"];
+            var fileInfo = new FileInfo(fileName);
+            if (modifiedSince == fileInfo.LastWriteTime.ToString("r"))
+            {
+                Response.StatusCode = 304;
+                return;
+            }
+
             Response.AddHeader("Accept-Ranges", "bytes");
             long offset = 0;
             long end = -1;
@@ -602,6 +618,7 @@ namespace CSHttpServer
             }
 
             long bytesWrote = 0;
+            long more = length;
             long buffSize = length < HttpServer.BUFFER_SIZE ? length : HttpServer.BUFFER_SIZE;
             byte[] buff = new byte[buffSize];
 
@@ -610,11 +627,15 @@ namespace CSHttpServer
             try
             {
                 input.Seek(start, SeekOrigin.Begin);
-                while (bytesWrote < length && input.Position < input.Length)
+                while (more > 0 && input.Position < input.Length)
                 {
                     int count = input.Read(buff, 0, buff.Length);
+                    if (count > more)
+                        count = (int)more;
+                    //count = count > more ? (int)more : count;
                     output.Write(buff, 0, count);
                     bytesWrote += count;
+                    more -= count;
                 }
                 LogLine("Transport End: Wrote " + bytesWrote + " bytes");
             }

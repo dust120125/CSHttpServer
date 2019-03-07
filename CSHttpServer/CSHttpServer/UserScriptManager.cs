@@ -9,6 +9,7 @@ using System.Collections.Specialized;
 
 namespace UserScript
 {
+
     public struct Result
     {
         //表示Server接受Result後應該做的動作
@@ -26,18 +27,20 @@ namespace UserScript
 
         public readonly NameValueCollection Headers;
 
-        public Result(Actions action, NameValueCollection headers, int? statusCode, string location, Stream inputStream, long streamLength)
+        public Result(Actions action, NameValueCollection headers, int? statusCode, string location, Stream inputStream, long? streamLength)
         {
             Action = action;
             Headers = headers;
             StatusCode = statusCode;
             Location = location;
             InputStream = inputStream;
-            StreamLength = streamLength;
+            StreamLength = streamLength ?? 0;
         }
     }
 
     public enum Actions : byte { HTML, SendFile, Text, Redirect, None }
+
+    public enum SetResultOption : byte { Replace = 4, Append = 2, Ignore = 1 }
 
     public abstract class BaseScript : IDisposable
     {
@@ -65,6 +68,12 @@ namespace UserScript
             }
         }
 
+        #region CONST
+
+        private const int BUFFER_SIZE = 1024 * 256; //256KB
+
+        #endregion
+
         protected readonly InnerNameValueCollection _GET;
         protected readonly InnerNameValueCollection _SERVER;
         protected readonly InnerNameValueCollection _REQUEST_HEADER;
@@ -84,24 +93,9 @@ namespace UserScript
         public Result Result
         {
             get
-            {                
-                __EchoWriter.Flush();
-                return new Result(__Action, __Headers, __StateCode, __Location, __EchoStream, __EchoStream.Length);
-            }
-
-            protected set
             {
-                __Action = value.Action;
-                __StateCode = value.StatusCode;
-                __Location = value.Location;
-                __EchoWriter.Close();
-                __EchoStream = value.InputStream as MemoryStream;
-                __EchoWriter = new StreamWriter(__EchoStream);
-                __Headers.Clear();
-                foreach(var k in value.Headers.AllKeys)
-                {
-                    __Headers.Set(k, value.Headers[k]);
-                }
+                __EchoWriter?.Flush();
+                return new Result(__Action, __Headers, __StateCode, __Location, __EchoStream, __EchoStream?.Length);
             }
         }
 
@@ -129,17 +123,24 @@ namespace UserScript
             }
 
             __Headers = new NameValueCollection();
-            __EchoStream = new MemoryStream(1024 * 256);
+        }
+
+        private void InitStream()
+        {
+            if (__EchoStream != null) return;
+            __EchoStream = new MemoryStream(BUFFER_SIZE);
             __EchoWriter = new StreamWriter(__EchoStream);
         }
 
         protected void echo(string str)
         {
+            if (__EchoStream == null) InitStream();
             __EchoWriter.Write(str);
         }
 
-        protected void echo(dynamic obj)
+        protected void echo(object obj)
         {
+            if (__EchoStream == null) InitStream();
             __EchoWriter.Write(obj);
         }
 
@@ -162,7 +163,7 @@ namespace UserScript
         protected void LogLine(object obj, bool console = true)
         {
             __ContextHandler.Log(obj, console);
-        } 
+        }
         #endregion
 
         protected void Header(string name, string value, bool replace = true)
@@ -196,11 +197,49 @@ namespace UserScript
             return new StreamReader(__EchoStream);
         }
 
+        protected void SetResult(Result result,
+            SetResultOption outStreamOption = SetResultOption.Replace)
+        {
+            __Action = result.Action;
+            __StateCode = result.StatusCode;
+            __Location = result.Location;
+
+            if (result.InputStream != null &&
+                outStreamOption != SetResultOption.Ignore)
+            {
+                if (__EchoStream == null)
+                {
+                    __EchoStream = result.InputStream as MemoryStream;
+                    __EchoWriter = new StreamWriter(__EchoStream);
+                }
+                else
+                {
+                    if (outStreamOption == SetResultOption.Replace)
+                    {
+                        __EchoWriter.Close();
+                        __EchoStream = result.InputStream as MemoryStream;
+                        __EchoWriter = new StreamWriter(__EchoStream);
+                    }
+                    else
+                    {
+                        __EchoWriter.Flush();
+                        (result.InputStream as MemoryStream).WriteTo((__EchoStream));
+                    }
+                }
+            }
+
+            __Headers.Clear();
+            foreach (var k in result.Headers.AllKeys)
+            {
+                __Headers.Set(k, result.Headers[k]);
+            }
+        }
+
         public void Dispose()
         {
-            __EchoWriter.Flush();
-            __EchoWriter.Close();
-            __EchoStream.Close();
+            __EchoWriter?.Flush();
+            __EchoWriter?.Close();
+            __EchoStream?.Close();
         }
 
         public abstract bool Run();

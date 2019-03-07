@@ -212,7 +212,22 @@ namespace CSHttpServer
                 Path.GetExtension(fileName).ToLowerInvariant();
             if (extension.Length == 0) return DefaultType;
 
-            extension = extension.Remove(0, 1);
+            return ParseExt(extension);
+        }
+
+        public static string GetMIMEType(FileInfo fileInfo)
+        {
+            //get file extension
+            string extension = fileInfo.Extension;
+            if (extension.Length == 0) return DefaultType;
+
+            return ParseExt(extension);
+        }
+
+        public static string ParseExt(string ext)
+        {
+            //extension file mime-type
+            var extension = ext.Remove(0, 1);
             if (MIMETypesDictionary.ContainsKey(extension))
             {
                 return MIMETypesDictionary[extension];

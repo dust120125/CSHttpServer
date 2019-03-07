@@ -74,6 +74,9 @@
     <Content Include="icons\back.gif" />
     <Content Include="icons\file.gif" />
     <Content Include="icons\folder.gif" />
+    <None Include="scripts\cmpanel.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="scripts\mediaplayer_backup.html" />
     <None Include="scripts\mediaplayer.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

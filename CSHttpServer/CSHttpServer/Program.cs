@@ -36,6 +36,23 @@ namespace HttpServerDemo
                 }
             }
 
+#if DEBUG
+            auth = "users.txt";
+            log = true;
+#endif
+
+            Console.WriteLine(string.Format("Server port: {0}", port));
+            Console.WriteLine(string.Format("Local port: {0}", local));
+            if (auth != null)
+            {
+                Console.WriteLine(string.Format("Authentication on, load users in: {0}", auth));
+            }
+            else
+            {
+                Console.WriteLine(string.Format("Authentication off (Security Warning!)"));
+            }
+            Console.WriteLine(string.Format("Server log: {0}\n", log));
+
             HttpServer hfs = new HttpServer(port)
             {
                 LocalPort = local,
@@ -57,6 +74,8 @@ namespace HttpServerDemo
                 }
                 if (cmdAtr[0] == "stop") break;
             }
+            Console.WriteLine("Press any key to leave...");
+            Console.ReadKey();
         }
     }
 }

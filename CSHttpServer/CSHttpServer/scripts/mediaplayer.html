@@ -1,39 +1,55 @@
 ﻿<html>
 <head>
     <meta charset="UTF-8">
-    <title>Test</title>
-    <link rel="stylesheet" type="text/css" href="<!--CSS-->"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Media Player</title>
+    <link rel="stylesheet" type="text/css" href="{0}" />
 </head>
 <body>
     <div id="page">
-        <div id="player-container" class="vertical-center">
-            <video id="player" controls></video>
-        </div>
-        <div style="float:right; max-width:33%; right:10%; transform:translateX(-50%); height:100%">
-            <div class="vertical-center" style="width:fit-content; max-width:400px;">
-                <div style="overflow:hidden">
-                    <div style="float:left;width:50%">
-                        <label class="switch">
-                            <input class="option-checkbox" type="checkbox" onchange="loop=this.checked" value="Loop" checked />
-                            <span>Loop</span>
-                        </label>
+        <div id="panel">
+            <div id="player-container">
+                <video id="player" controls></video>
+            </div>
+            <div id="control-container">
+                <div id="control">
+                    <div style="overflow:hidden">
+                        <div style="float:left;width:50%">
+                            <label class="switch">
+                                <input class="option-checkbox" type="checkbox" onchange="loop=this.checked" value="Loop" checked />
+                                <span>Loop</span>
+                            </label>
+                        </div>
+                        <div style="float:right;width:50%">
+                            <label class="switch">
+                                <input class="option-checkbox" type="checkbox" onchange="setRandom(this.checked)" value="Loop" />
+                                <span>Random</span>
+                            </label>
+                        </div>
                     </div>
-                    <div style="float:right;width:50%">
-                        <label class="switch">
-                            <input class="option-checkbox" type="checkbox" onchange="random=this.checked" value="Loop" />
-                            <span>Random</span>
-                        </label>
+                    <div style="overflow:hidden">
+                        <div style="float:left;width:50%">
+                            <label class="button" onclick="previous()">
+                                <span>≪</span>
+                            </label>
+                        </div>
+                        <div style="float:right;width:50%">
+                            <label class="button" onclick="next()">
+                                <span>≫</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="media-title">
+                        <span id="current">None</span>
                     </div>
                 </div>
-                <div style="color:aliceblue; background-color:dodgerblue; margin-top:5px; padding:3px; overflow:hidden; height:30px">
-                    <span class="vertical-center" id="current" style="display: inline-block; vertical-align:middle">None</span>
-                </div>
-                <div class="fit" id="media-list" style="margin-top:5px">
-                    <!--MediaItems-->
-                </div>
+            </div>
+            <div class="fit" id="media-list" style="margin-top:5px">
+                {1}
             </div>
         </div>
     </div>
-    <script src="<!--JS-->" type="text/javascript"></script>
+    <script src="{2}" type="text/javascript"></script>
 </body>
+{3}
 </html>
